@@ -1,0 +1,20 @@
+{
+  "name": "booklibrary-graphql",
+  "version": "1.0.0",
+  "description": "graphQL practice from Full Stack Open",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.9.1",
+    "graphql": "^16.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
