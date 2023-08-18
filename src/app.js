@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 
 const Book = require("./models/bookModel");
 const Author = require("./models/authorModel");
+const User = require("./models/userModel");
 
 const typeDefs = `
   type Book {
@@ -49,10 +50,11 @@ const typeDefs = `
       genres: [String!]!
     ): Book
 
-    editAuthor(name: String! setBornTo: Int!): 
+    editAuthor(name: String! setBornTo: Int!): Author
     
     createUser(
       username: String!
+      password: String!
       favoriteGenre: String!
     ): User
 
@@ -109,6 +111,12 @@ const resolvers = {
             code: "BAD_USER_INPUT",
           },
         });
+      if (args.genres.length < 1)
+      throw new GraphQLError("Books require at least 1 genre", {
+        extensions: {
+          code: "BAD_USER_INPUT",
+        },
+      });
 
       let author = await Author.findOne({ name: args.author });
 
@@ -137,6 +145,7 @@ const resolvers = {
           },
         });
       }
+
       const author = await Author.findOne({ name: args.name });
       if (!author) return null;
 
@@ -176,7 +185,9 @@ const resolvers = {
       const user = await User.findOne({ username: args.username });
 
       const isCorrectPass =
-        user === null ? false : await bcrypt.compare(password, user.password);
+        user === null
+          ? false
+          : await bcrypt.compare(args.password, user.password);
 
       if (!user || !isCorrectPass) {
         throw new GraphQLError("wrong credentials", {

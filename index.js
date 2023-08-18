@@ -2,12 +2,13 @@ const server = require("./src/app");
 const mongoose = require("mongoose");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 
-require("dotenv").config();
-const MONGODB_URI = process.env.MONGODB_URI;
+const jwt = require("jsonwebtoken");
+const User = require("./src/models/userModel");
 
-console.log("connecting to", MONGODB_URI);
+require("dotenv").config();
+console.log("connecting to server");
 mongoose
-  .connect(MONGODB_URI)
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("connected to MongoDB");
   })
