@@ -44,7 +44,11 @@ const resolvers = {
     authorCount: async () => await Author.countDocuments(),
     allBooks: async (root, args) => {
       let query = {};
-      if (args.author) query.author = args.author;
+      if (args.author) {
+        const authorDoc = await Author.findOne({ name: args.author });
+        if (authorDoc) query.author = authorDoc._id;
+        else return [];
+      }
       if (args.genre) query.genres = { $in: [args.genre] };
 
       return await Book.find(query).populate("author");
@@ -60,6 +64,19 @@ const resolvers = {
 
   Mutation: {
     addBook: async (root, args) => {
+      if (args.title.length < 3)
+        throw new GraphQLError("Book title too short", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        });
+      if (args.author.length < 3)
+        throw new GraphQLError("Author name too short", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        });
+
       let author = await Author.findOne({ name: args.author });
 
       if (!author) {
