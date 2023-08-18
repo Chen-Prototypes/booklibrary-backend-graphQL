@@ -1,6 +1,5 @@
 const { ApolloServer } = require("@apollo/server");
 
-const mongoose = require("mongoose");
 const Book = require("./models/bookModel");
 const Author = require("./models/authorModel");
 
