@@ -1,4 +1,3 @@
-const { ApolloServer } = require("@apollo/server");
 const { GraphQLError } = require("graphql");
 
 const jwt = require("jsonwebtoken");
@@ -8,62 +7,8 @@ const Book = require("./models/bookModel");
 const Author = require("./models/authorModel");
 const User = require("./models/userModel");
 
-const typeDefs = `
-  type Book {
-    title: String!
-    published: Int!
-    author: Author!
-    genres: [String!]!
-    id: ID!
-  }
-
-  type Author {
-    name: String!
-    born: Int
-    bookCount: Int!
-    id: ID!
-  }
-
-  type User {
-    username: String!
-    favoriteGenre: String!
-    id: ID!
-  }
-  
-  type Token {
-    value: String!
-  }
-
-  type Query {
-    bookCount: Int!
-    authorCount: Int!
-    allBooks(author: String genre: String): [Book!]!
-    allAuthors: [Author!]!
-    me: User
-  }
-
-  type Mutation {
-    addBook(
-      title: String!
-      author: String!
-      published: Int!
-      genres: [String!]!
-    ): Book
-
-    editAuthor(name: String! setBornTo: Int!): Author
-    
-    createUser(
-      username: String!
-      password: String!
-      favoriteGenre: String!
-    ): User
-
-    login(
-      username: String!
-      password: String!
-    ): Token
-  }
-`;
+const { PubSub } = require("graphql-subscriptions");
+const pubsub = new PubSub();
 
 const resolvers = {
   Query: {
@@ -81,7 +26,11 @@ const resolvers = {
       return await Book.find(query).populate("author");
     },
     allAuthors: async () => await Author.find({}),
-    me: (root, args, context) => context.currentUser,
+    me: (root, args, context) => {
+      if (!context.currentUser.favoriteGenre)
+        return { ...context.currentUser, favoriteGenre: "Genre1" };
+      return context.currentUser;
+    },
   },
 
   Author: {
@@ -92,6 +41,7 @@ const resolvers = {
 
   Mutation: {
     addBook: async (root, args, context) => {
+          
       if (!context.currentUser) {
         throw new GraphQLError("not authenticated", {
           extensions: {
@@ -112,11 +62,11 @@ const resolvers = {
           },
         });
       if (args.genres.length < 1)
-      throw new GraphQLError("Books require at least 1 genre", {
-        extensions: {
-          code: "BAD_USER_INPUT",
-        },
-      });
+        throw new GraphQLError("Books require at least 1 genre", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+          },
+        });
 
       let author = await Author.findOne({ name: args.author });
 
@@ -126,7 +76,10 @@ const resolvers = {
       }
 
       const book = new Book({ ...args, author });
-      return await book.save().catch((error) => {
+
+      try {
+        await book.save();
+      } catch (error) {
         throw new GraphQLError("Could not add book", {
           extensions: {
             code: "BAD_USER_INPUT",
@@ -134,7 +87,11 @@ const resolvers = {
             error,
           },
         });
-      });
+      }
+
+      pubsub.publish("BOOK_ADDED", { bookAdded: book });
+
+      return book;
     },
 
     editAuthor: async (root, args, context) => {
@@ -203,11 +160,11 @@ const resolvers = {
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) };
     },
   },
+  Subscription: {
+    bookAdded: {
+      subscribe: () => pubsub.asyncIterator("BOOK_ADDED"),
+    },
+  },
 };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-module.exports = server;
+module.exports = resolvers;
