@@ -115,6 +115,7 @@ const resolvers = {
       let user = new User({
         username: args.username,
         password: args.password,
+        favoriteGenre: args.favoriteGenre,
       });
 
       const saltRounds = 10;
