@@ -2,4 +2,4 @@
 
 ## [Shelf Schema Web App](https://shelf-schema.fly.dev/)
 
-This is my backend to my personal book library built with Apollo Server and GraphQL. Features real-time data subscriptions using WebSockets with Express (Apollo please support), backed by MongoDB, and deployed on Fly.io.
+This is my backend to my personal book library built with Apollo Server and GraphQL. Features real-time data subscriptions using WebSockets with Express, backed by MongoDB, and deployed on Fly.io.
