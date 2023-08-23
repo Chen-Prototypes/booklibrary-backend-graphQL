@@ -33,15 +33,8 @@ const resolvers = {
     },
   },
 
-  Author: {
-    bookCount: async (root) => {
-      return await Book.countDocuments({ author: root._id });
-    },
-  },
-
   Mutation: {
     addBook: async (root, args, context) => {
-          
       if (!context.currentUser) {
         throw new GraphQLError("not authenticated", {
           extensions: {
@@ -70,10 +63,10 @@ const resolvers = {
 
       let author = await Author.findOne({ name: args.author });
 
-      if (!author) {
-        author = new Author({ name: args.author });
-        await author.save();
-      }
+      if (!author) author = new Author({ name: args.author, bookCount: 0 });
+
+      author.bookCount++;
+      await author.save();
 
       const book = new Book({ ...args, author });
 

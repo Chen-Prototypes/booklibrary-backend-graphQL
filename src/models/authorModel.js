@@ -11,6 +11,10 @@ const schema = new mongoose.Schema({
   born: {
     type: Number,
   },
+  bookCount: {
+    type: Number,
+    min: [0, "Book count cannot be negative"],
+  },
 });
 
 schema.plugin(uniqueValidator);
