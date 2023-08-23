@@ -9,6 +9,7 @@ const { expressMiddleware } = require("@apollo/server/express4");
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
+const path = require("path");
 const jwt = require("jsonwebtoken");
 
 const { WebSocketServer } = require("ws");
@@ -32,6 +33,12 @@ mongoose
 
 const start = async () => {
   const app = express();
+
+  app.use(express.static("build"));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "build", "index.html"));
+  });
+
   const httpServer = http.createServer(app);
 
   const wsServer = new WebSocketServer({
@@ -79,7 +86,7 @@ const start = async () => {
     })
   );
 
-  const PORT = 4000;
+  const PORT = process.env.PORT;
 
   httpServer.listen(PORT, () =>
     console.log(`Server is now running on http://localhost:${PORT}`)
